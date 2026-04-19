@@ -82,6 +82,7 @@
         <div class="marquee-content">
             ✨ "دَعُوا الأَوْلاَدَ يَأْتُونَ إِلَيَّ وَلاَ تَمْنَعُوهُمْ" (مت 19: 14) &nbsp;&nbsp;&nbsp;
             ✨ "أَمَّا أَنَا وَبَيْتِي فَنَعْبُدُ الرَّبَّ" (يش 24: 15) &nbsp;&nbsp;&nbsp;
+            ✨ "رَبِّ، مَاذَا تُرِيدُ أَنْ أَفْعَلَ؟" (أع 9: 6) &nbsp;&nbsp;&nbsp;
             ✨ "كُنْ أَمِينًا إِلَى الْمَوْتِ فَسَأُعْطِيكَ إِكْلِيلَ الْحَيَاةِ" (رؤ 2: 10) &nbsp;&nbsp;&nbsp;
             ✨ "كُلُّ مَا تَفْعَلُونَهُ، فَافْعَلُوهُ مِنَ الْقَلْبِ، كَمَا لِلرَّبِّ" (كو 3: 23)
         </div>
@@ -149,42 +150,21 @@
     let allNames = [];
     let currentLoadedRecords = [];
 
-    // --- وظائف الأذونات الجديدة ---
-    function initAppPermissions() {
-        if ("Notification" in window) {
-            Notification.requestPermission();
-        }
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(() => {}, () => {
-                console.log("إذن الموقع مرفوض");
-            });
-        }
-    }
-
-    function sendLoginNotification(name) {
-        if ("Notification" in window && Notification.permission === "granted") {
-            new Notification("فصل القديس أبانوب", {
-                body: `تم تسجيل دخول الخادم: ${name}`,
-                icon: "abanoub.jpg"
-            });
-        }
-    }
-
+    // جعل دالة الدخول عامة لتعمل مع HTML
     window.handleLogin = () => {
-        const u = document.getElementById('user').value.toLowerCase();
+        const u = document.getElementById('user').value.toLowerCase().trim();
         const p = document.getElementById('pass').value;
         if(users[u] && users[u].pass === p) {
             currentUser = { name: users[u].display, role: users[u].role };
             sessionStorage.setItem('loggedUser', JSON.stringify(currentUser));
-            initAppPermissions();
-            sendLoginNotification(currentUser.name);
             checkAuth();
+            if ("Notification" in window) Notification.requestPermission();
         } else { alert("بيانات خطأ"); }
     };
 
     window.logout = () => { sessionStorage.removeItem('loggedUser'); location.reload(); };
 
-    function checkAuth() {
+    window.checkAuth = () => {
         if(currentUser) {
             document.getElementById('loginOverlay').style.display = 'none';
             document.getElementById('mainApp').style.display = 'block';
@@ -200,7 +180,7 @@
             document.getElementById('loginOverlay').style.display = 'flex';
             document.getElementById('mainApp').style.display = 'none';
         }
-    }
+    };
 
     async function loadAllNamesFromDB() {
         const snap = await getDocs(colRef);
@@ -308,11 +288,8 @@
     document.getElementById('dateFrom').value = today;
     document.getElementById('dateTo').value = today;
     
-    // تشغيل فحص الدخول عند تحميل الصفحة
-    window.onload = () => {
-        checkAuth();
-        if(currentUser) initAppPermissions();
-    };
+    // تشغيل الفحص عند التحميل
+    window.checkAuth();
 </script>
 </body>
 </html>
